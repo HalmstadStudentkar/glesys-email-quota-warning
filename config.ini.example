@@ -1,0 +1,19 @@
+[API]
+; The user+key need access to the email quota part of the GleSYS API.
+URL: https://api.glesys.com/email/
+user: CLxxxxx
+key: the generated key
+
+[Quota]
+; Comma separated list.
+domainname: example.com, example.se
+; Ratio is a float.
+ratio: 84.9
+
+[SMTP]
+enabled: False
+server: mail.glesys.com
+TLS: True
+user: u@example.com
+password: NotMyRealPassword!
+sender: someone@example.com
