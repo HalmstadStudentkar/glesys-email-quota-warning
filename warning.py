@@ -74,12 +74,12 @@ def apirequest(target, data):
         to STDOUT and a exit code 2 generated.
     """
     try:
-        h = httplib2.Http()
-        h.add_credentials(APIUSER, APIKEY)
-        _, content = h.request(APIURL+target,
-                               'POST',
-                               urlencode(data),
-                               headers=HEADERS)
+        httpreq = httplib2.Http()
+        httpreq.add_credentials(APIUSER, APIKEY)
+        _, content = httpreq.request(APIURL+target,
+                                     'POST',
+                                     urlencode(data),
+                                     headers=HEADERS)
     except:
         print "No connection"
         sys.exit(2)
