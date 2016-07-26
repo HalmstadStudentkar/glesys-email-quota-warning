@@ -36,26 +36,26 @@ if len(cfg.sections()) != 3:
     print "Configuration not correct"
     sys.exit(1)
 
-apiurl = cfg.get("API", "URL")
-apiuser = cfg.get("API", "user")
-apikey = cfg.get("API", "key")
+APIURL = cfg.get("API", "URL")
+APIUSER = cfg.get("API", "user")
+APIKEY = cfg.get("API", "key")
 
-domainname = cfg.get("Quota", "domainname").split(",")
+DOMAINNAME = cfg.get("Quota", "domainname").split(",")
 # TODO: Add setting for showing all - not just "violators".
-maxratio = cfg.getfloat("Quota", "ratio")
+MAXRATIO = cfg.getfloat("Quota", "ratio")
 
 if cfg.getboolean("SMTP", "enabled"):
-    smtpenabled = True
-    smtpserver = cfg.get("SMTP", "server")
-    smtptls = cfg.getboolean("SMTP", "TLS")
-    smtpuser = cfg.get("SMTP", "user")
-    smtppassword = cfg.get("SMTP", "password")
-    sender = cfg.get("SMTP", "sender")
+    SMTPENABLED = True
+    SMTPSERVER = cfg.get("SMTP", "server")
+    SMTPTLS = cfg.getboolean("SMTP", "TLS")
+    SMTPUSER = cfg.get("SMTP", "user")
+    SMTPPASSWORD = cfg.get("SMTP", "password")
+    SENDER = cfg.get("SMTP", "sender")
 else:
-    smtpenabled = False
+    SMTPENABLED = False
 
-currentdate = strftime("%Y-%m-%d")
-headers = {'Content-type': 'application/x-www-form-urlencoded',
+CURRENTDATE = strftime("%Y-%m-%d")
+HEADERS = {'Content-type': 'application/x-www-form-urlencoded',
            'Accept': 'application/json'}
 
 
@@ -75,11 +75,11 @@ def apirequest(target, data):
     """
     try:
         h = httplib2.Http()
-        h.add_credentials(apiuser, apikey)
-        resp, content = h.request(apiurl+target,
-                                  'POST',
-                                  urlencode(data),
-                                  headers=headers)
+        h.add_credentials(APIUSER, APIKEY)
+        _, content = h.request(APIURL+target,
+                               'POST',
+                               urlencode(data),
+                               headers=HEADERS)
     except:
         print "No connection"
         sys.exit(2)
@@ -127,27 +127,28 @@ def sendmsg(recipient, information):
     """
     # TODO: Add list of "whitelisted" addresses.
     # TODO: Move to config
-    msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(maxratio)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos")
-    msg['From'] = sender
+    msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(MAXRATIO)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos")
+    msg['From'] = SENDER
     msg['To'] = recipient
     # TODO: Move to config.
-    msg['Subject'] = "OBS! Trångt i mailkorgen - "+currentdate
+    msg['Subject'] = "OBS! Trångt i mailkorgen - "+CURRENTDATE
 
-    smtp = smtplib.SMTP(smtpserver)
+    smtp = smtplib.SMTP(SMTPSERVER)
     try:
-        if smtptls:
+        if SMTPTLS:
             smtp.starttls()
-        smtp.login(smtpuser, smtppassword)
+        smtp.login(SMTPUSER, SMTPPASSWORD)
     except:
         print "SMTP login failed"
-        return -1
+        return False
 
-    smtp.sendmail(sender, recipient, msg.as_string())
+    smtp.sendmail(SENDER, recipient, msg.as_string())
     smtp.close()
+    return True
 
 
-for name in domainname:
-    if smtpenabled is False:
+for name in DOMAINNAME:
+    if SMTPENABLED is False:
         print "Checking %s..." % name
 
     accountlist = fetchaccounts(name)
@@ -156,9 +157,10 @@ for name in domainname:
         used = float(quotaobj["used"]["amount"])
         allowed = float(quotaobj["total"]["max"])
         ratio = round((used / allowed) * 100, 2)
-        if ratio > maxratio:
+        if ratio > MAXRATIO:
+            # TODO: Move to config
             usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
-            if smtpenabled:
+            if SMTPENABLED:
                 sendmsg(account["emailaccount"], usageinfo)
             else:
                 print "%s: %s" % (account["emailaccount"], usageinfo)
