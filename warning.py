@@ -29,28 +29,28 @@ if isfile("config.ini") is False:
              in place.'''
     sys.exit(1)
 
-cfg = ConfigParser.RawConfigParser()
-cfg.read("config.ini")
+CONFIG = ConfigParser.RawConfigParser()
+CONFIG.read("config.ini")
 
-if len(cfg.sections()) != 3:
+if len(CONFIG.sections()) != 3:
     print "Configuration not correct"
     sys.exit(1)
 
-APIURL = cfg.get("API", "URL")
-APIUSER = cfg.get("API", "user")
-APIKEY = cfg.get("API", "key")
+APIURL = CONFIG.get("API", "URL")
+APIUSER = CONFIG.get("API", "user")
+APIKEY = CONFIG.get("API", "key")
 
-DOMAINNAME = cfg.get("Quota", "domainname").split(",")
+DOMAINNAME = CONFIG.get("Quota", "domainname").split(",")
 # TODO: Add setting for showing all - not just "violators".
-MAXRATIO = cfg.getfloat("Quota", "ratio")
+MAXRATIO = CONFIG.getfloat("Quota", "ratio")
 
-if cfg.getboolean("SMTP", "enabled"):
+if CONFIG.getboolean("SMTP", "enabled"):
     SMTPENABLED = True
-    SMTPSERVER = cfg.get("SMTP", "server")
-    SMTPTLS = cfg.getboolean("SMTP", "TLS")
-    SMTPUSER = cfg.get("SMTP", "user")
-    SMTPPASSWORD = cfg.get("SMTP", "password")
-    SENDER = cfg.get("SMTP", "sender")
+    SMTPSERVER = CONFIG.get("SMTP", "server")
+    SMTPTLS = CONFIG.getboolean("SMTP", "TLS")
+    SMTPUSER = CONFIG.get("SMTP", "user")
+    SMTPPASSWORD = CONFIG.get("SMTP", "password")
+    SENDER = CONFIG.get("SMTP", "sender")
 else:
     SMTPENABLED = False
 
