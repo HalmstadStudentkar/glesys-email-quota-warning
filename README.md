@@ -12,18 +12,17 @@ behalf.
 # Configuration
 
 Copy the mailquotaconfig.ini.example file to
-mailquotaconfig.ini.example.  Edit the file for your settings.
+mailquotaconfig.ini.example. Edit the file for your settings.
 
 If you are not very comfortable with editing configuration files use
 the wizard also included in the repository. Also usable for editing a
 already present file.
 
-Start wizard:
- ./makeconfig.py
+Start wizard: `./makeconfig.py`
 
 # Credits and license
 
-The codet is written by Martin Bagge / brother <brother@bsnet.se> on
+The code is written by Martin Bagge / brother <brother@bsnet.se> on
 behalf of Halmstad Studentkår, KAOS. The code is licensed MIT, patches
 and suggestions are welcome.
 
