@@ -8,6 +8,16 @@ email to the account in question.
 
 MIT license applies, see the file COPYING.
 
+TODO:
+  - Add a separate value for printing to STDOUT, default False.
+  - Write configmaker tool
+  - Add configuration setting to include all accounts in fetch.
+  - Add a white list of accounts to not send warnings for.
+  - Move mail subject to configuration.
+  - Move mail body to configuration.
+  - Move "information" string to configuration, "XX av YY (ZZ%)"
+  - More verbose exception handling.
+
 Martin Bagge <brother@bsnet.se>
 Halmstad Studentkår, KAOS <kaos@karen.hh.se>
 """
@@ -21,7 +31,6 @@ import smtplib
 from email.mime.text import MIMEText
 from time import strftime
 
-# TODO: Write the tool.
 if isfile("config.ini") is False:
     print '''Abort: No configuration file found.
              Copy config.ini.exemple to config.ini and edit it.
@@ -41,7 +50,6 @@ APIUSER = CONFIG.get("API", "user")
 APIKEY = CONFIG.get("API", "key")
 
 DOMAINNAME = CONFIG.get("Quota", "domainname").split(",")
-# TODO: Add setting for showing all - not just "violators".
 MAXRATIO = CONFIG.getfloat("Quota", "ratio")
 
 if CONFIG.getboolean("SMTP", "enabled"):
@@ -125,12 +133,9 @@ def sendmsg(recipient, information):
         True if all seem to have executed correct.
         False if SMTP session did not work properly.
     """
-    # TODO: Add list of "whitelisted" addresses.
-    # TODO: Move to config
     msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(MAXRATIO)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos")
     msg['From'] = SENDER
     msg['To'] = recipient
-    # TODO: Move to config.
     msg['Subject'] = "OBS! Trångt i mailkorgen - "+CURRENTDATE
 
     smtp = smtplib.SMTP(SMTPSERVER)
@@ -158,7 +163,6 @@ for name in DOMAINNAME:
         allowed = float(quotaobj["total"]["max"])
         ratio = round((used / allowed) * 100, 2)
         if ratio > MAXRATIO:
-            # TODO: Move to config
             usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
             if SMTPENABLED:
                 sendmsg(account["emailaccount"], usageinfo)
