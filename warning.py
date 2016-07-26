@@ -1,7 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# MIT license applies, see the file COPYING.
-# Martin Bagge <brother@bsnet.se>
+"""Fetches email account information from the GleSYS email API.
+
+Compares the account disk usage ratio to a given threshold and
+notifies about account(s) that are over the thresshold, via STDOUT or
+email to the account in question.
+
+MIT license applies, see the file COPYING.
+
+Martin Bagge <brother@bsnet.se>
+Halmstad Studentkår, KAOS <kaos@karen.hh.se>
+"""
 from os.path import isfile
 import sys
 import ConfigParser
@@ -50,8 +59,20 @@ headers = {'Content-type': 'application/x-www-form-urlencoded',
            'Accept': 'application/json'}
 
 
-# TODO: Need to write proper docs.
 def apirequest(target, data):
+    """Takes a path target in the GleSYS API and passes the data recieved
+    as a dict to using POST method. Then returns the resulting json
+    response from the API call.
+
+    Arguments:
+        target (str): a target at the API - absolute.
+        data  (dict): the data to post to the API.
+
+    Returns:
+        json object loaded from response content string.
+        If the communication with the API fails a message is printed
+        to STDOUT and a exit code 2 generated.
+    """
     try:
         h = httplib2.Http()
         h.add_credentials(apiuser, apikey)
@@ -66,18 +87,44 @@ def apirequest(target, data):
     return json.loads(content)
 
 
-# TODO: Need to write proper docs.
-def fetchAccounts(domain):
+def fetchaccounts(domain):
+    """Retrieves the list of email accounts available for the provided domain.
+    Arguments:
+        domain (str): The domain name to query from the API.
+
+    Returns:
+        The json object will be passed as return without editing.
+    """
     return apirequest("list", {'domainname': domain})
 
 
-# TODO: Need to write proper docs.
-def fetchQuota(address):
+def fetchquota(address):
+    """Retrieves the account quota information and passes the interesting
+    part of the json object along to the request source.
+
+    Arguments:
+        address (str): The email account address of interest.
+
+    Returns:
+        The quota part of the json object for the response.
+    """
     return apirequest("quota", {'emailaccount': address})["response"]["quota"]
 
 
-# TODO: Need to write proper docs.
 def sendmsg(recipient, information):
+    """Sends an email message to the account provided. Uses the
+    information to add some insights to the warning and indicates how
+    urgent the matter is.
+
+    Arguments:
+        recipient (str): A recipient email address.
+        information (str): A prepared string that will be inserted into the
+                           email message. The string reads "XX of YY (ZZ%)".
+
+    Returns:
+        True if all seem to have executed correct.
+        False if SMTP session did not work properly.
+    """
     # TODO: Add list of "whitelisted" addresses.
     # TODO: Move to config
     msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(maxratio)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos")
@@ -103,9 +150,9 @@ for name in domainname:
     if smtpenabled is False:
         print "Checking %s..." % name
 
-    accountlist = fetchAccounts(name)
+    accountlist = fetchaccounts(name)
     for account in accountlist["response"]["list"]["emailaccounts"]:
-        quotaobj = fetchQuota(account["emailaccount"])
+        quotaobj = fetchquota(account["emailaccount"])
         used = float(quotaobj["used"]["amount"])
         allowed = float(quotaobj["total"]["max"])
         ratio = round((used / allowed) * 100, 2)
