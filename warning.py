@@ -95,7 +95,7 @@ except ConfigParser.NoOptionError:
 debuginfo("Fetching mail settings.")
 SMTPENABLED = False
 try:
-    if CONFIG.getboolean("SMTP", "enabled"):
+    if CONFIG.getboolean("SMTP", "enabled") is True:
         debuginfo("Mailing enabled.")
         SMTPENABLED = True
         try:
@@ -198,7 +198,7 @@ def sendmsg(recipient, information):
     smtp = smtplib.SMTP(SMTPSERVER)
     try:
         debuginfo("Trying SMTP connection.")
-        if SMTPTLS:
+        if SMTPTLS is True:
             smtp.starttls()
         smtp.login(SMTPUSER, SMTPPASSWORD)
         debuginfo("SMTP connection established.")
@@ -229,7 +229,7 @@ for name in DOMAINNAME:
         ratio = round((used / allowed) * 100, 2)
         usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
         if ratio > MAXRATIO:
-            if SMTPENABLED:
+            if SMTPENABLED is True:
                 sendmsg(account["emailaccount"], usageinfo)
             else:
                 print "%s: %s" % (account["emailaccount"], usageinfo)
