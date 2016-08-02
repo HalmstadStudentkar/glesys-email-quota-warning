@@ -9,7 +9,6 @@ email to the account in question.
 MIT license applies, see the file COPYING.
 
 TODO:
-  - Add a separate value for printing to STDOUT, default False.
   - Write configmaker tool
   - Add configuration setting to include all accounts in fetch.
   - Add a white list of accounts to not send warnings for.
@@ -41,9 +40,11 @@ if isfile("config.ini") is False:
 CONFIG = ConfigParser.RawConfigParser()
 CONFIG.read("config.ini")
 
-if len(CONFIG.sections()) != 3:
+if len(CONFIG.sections()) != 4:
     print "Configuration not correct"
     sys.exit(1)
+
+TALKATIVE = CONFIG.getboolean("Other", "verbose")
 
 APIURL = CONFIG.get("API", "URL")
 APIUSER = CONFIG.get("API", "user")
@@ -154,7 +155,7 @@ def sendmsg(recipient, information):
 
 for name in DOMAINNAME:
     name = str.strip(name)
-    if SMTPENABLED is False:
+    if TALKATIVE is True:
         print "Checking %s..." % name
 
     accountlist = fetchaccounts(name)
@@ -163,9 +164,11 @@ for name in DOMAINNAME:
         used = float(quotaobj["used"]["amount"])
         allowed = float(quotaobj["total"]["max"])
         ratio = round((used / allowed) * 100, 2)
+        usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
         if ratio > MAXRATIO:
-            usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
             if SMTPENABLED:
                 sendmsg(account["emailaccount"], usageinfo)
             else:
                 print "%s: %s" % (account["emailaccount"], usageinfo)
+        if TALKATIVE is True:
+            print "%s: %s" % (account["emailaccount"], usageinfo)

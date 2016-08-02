@@ -17,3 +17,6 @@ TLS: True
 user: u@example.com
 password: NotMyRealPassword!
 sender: someone@example.com
+
+[Other]
+verbose: False
