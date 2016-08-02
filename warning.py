@@ -153,6 +153,7 @@ def sendmsg(recipient, information):
 
 
 for name in DOMAINNAME:
+    name = str.strip(name)
     if SMTPENABLED is False:
         print "Checking %s..." % name
 
