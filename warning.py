@@ -44,9 +44,17 @@ if len(CONFIG.sections()) != 4:
     print "Configuration not correct"
     sys.exit(1)
 
+DEBUGMODE = False
+try:
+    DEBUGMODE = CONFIG.getboolean("Other", "debug")
+except ConfigParser.NoOptionError:
+    pass
 
-DEBUGMODE = CONFIG.getboolean("Other", "debug")
-TALKATIVE = CONFIG.getboolean("Other", "verbose")
+TALKATIVE = False
+try:
+    TALKATIVE = CONFIG.getboolean("Other", "verbose")
+except ConfigParser.NoOptionError:
+    pass
 
 def debuginfo(outstring):
     """If debug mode is enabled in config.ini section Other a more verbose
@@ -60,26 +68,52 @@ def debuginfo(outstring):
         print "DEBUG: %s" % outstring
 
 debuginfo("Fetching API settings.")
-APIURL = CONFIG.get("API", "URL")
-APIUSER = CONFIG.get("API", "user")
-APIKEY = CONFIG.get("API", "key")
+try:
+    APIURL = CONFIG.get("API", "URL")
+    APIUSER = CONFIG.get("API", "user")
+    APIKEY = CONFIG.get("API", "key")
+except ConfigParser.NoOptionError:
+    print "Everything in API config section must be set, no defaults available."
+    sys.exit(4)
 
 debuginfo("Fetching domain information.")
-DOMAINNAME = CONFIG.get("Quota", "domainname").split(",")
-MAXRATIO = CONFIG.getfloat("Quota", "ratio")
+try:
+    DOMAINNAME = CONFIG.get("Quota", "domainname").split(",")
+except ConfigParser.NoOptionError:
+    print """Either a domain name or a comma separated list of domains must be
+    provided in Quota section. No default suggestions."""
+    sys.exit(4)
+MAXRATIO = 84.9
+try:
+    MAXRATIO = CONFIG.getfloat("Quota", "ratio")
+except ValueError:
+    print "Ambigous option. Can not parse to float."
+    sys.exit(4)
+except ConfigParser.NoOptionError:
+    debuginfo("Will use 84.9 as default ratio, config missing.")
 
 debuginfo("Fetching mail settings.")
-if CONFIG.getboolean("SMTP", "enabled"):
-    debuginfo("Mailing enabled.")
-    SMTPENABLED = True
-    SMTPSERVER = CONFIG.get("SMTP", "server")
-    SMTPTLS = CONFIG.getboolean("SMTP", "TLS")
-    SMTPUSER = CONFIG.get("SMTP", "user")
-    SMTPPASSWORD = CONFIG.get("SMTP", "password")
-    SENDER = CONFIG.get("SMTP", "sender")
-else:
-    debuginfo("Mailing disabled.")
-    SMTPENABLED = False
+SMTPENABLED = False
+try:
+    if CONFIG.getboolean("SMTP", "enabled"):
+        debuginfo("Mailing enabled.")
+        SMTPENABLED = True
+        try:
+            SMTPSERVER = CONFIG.get("SMTP", "server")
+            SMTPTLS = CONFIG.getboolean("SMTP", "TLS")
+            SMTPUSER = CONFIG.get("SMTP", "user")
+            SMTPPASSWORD = CONFIG.get("SMTP", "password")
+            SENDER = CONFIG.get("SMTP", "sender")
+        except ConfigParser.NoOptionError:
+            print "Config enabled mailing but all settings seems to be missing. Disabling mail sending."
+            SMTPENABLED = False
+        except ValueError:
+            print "SMTP config can not be parsed correct. Disabling mail sending."
+            SMTPENABLED = False
+    else:
+        debuginfo("Mailing disabled.")
+except ConfigParser.NoOptionError:
+    pass
 
 debuginfo("Setting constants.")
 CURRENTDATE = strftime("%Y-%m-%d")
