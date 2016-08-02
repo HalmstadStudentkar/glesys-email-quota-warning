@@ -20,3 +20,4 @@ sender: someone@example.com
 
 [Other]
 verbose: False
+debug: False

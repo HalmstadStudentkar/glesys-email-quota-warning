@@ -44,16 +44,33 @@ if len(CONFIG.sections()) != 4:
     print "Configuration not correct"
     sys.exit(1)
 
+
+DEBUGMODE = CONFIG.getboolean("Other", "debug")
 TALKATIVE = CONFIG.getboolean("Other", "verbose")
 
+def debuginfo(outstring):
+    """If debug mode is enabled in config.ini section Other a more verbose
+    information flow will be used when parsing the quota info list.
+    All messages will be prepended with 'DEBUG: '.
+
+    Arguments:
+        outstring (str): The informational message to be printed to STDOUT.
+    """
+    if DEBUGMODE is True:
+        print "DEBUG: %s" % outstring
+
+debuginfo("Fetching API settings.")
 APIURL = CONFIG.get("API", "URL")
 APIUSER = CONFIG.get("API", "user")
 APIKEY = CONFIG.get("API", "key")
 
+debuginfo("Fetching domain information.")
 DOMAINNAME = CONFIG.get("Quota", "domainname").split(",")
 MAXRATIO = CONFIG.getfloat("Quota", "ratio")
 
+debuginfo("Fetching mail settings.")
 if CONFIG.getboolean("SMTP", "enabled"):
+    debuginfo("Mailing enabled.")
     SMTPENABLED = True
     SMTPSERVER = CONFIG.get("SMTP", "server")
     SMTPTLS = CONFIG.getboolean("SMTP", "TLS")
@@ -61,8 +78,10 @@ if CONFIG.getboolean("SMTP", "enabled"):
     SMTPPASSWORD = CONFIG.get("SMTP", "password")
     SENDER = CONFIG.get("SMTP", "sender")
 else:
+    debuginfo("Mailing disabled.")
     SMTPENABLED = False
 
+debuginfo("Setting constants.")
 CURRENTDATE = strftime("%Y-%m-%d")
 HEADERS = {'Content-type': 'application/x-www-form-urlencoded',
            'Accept': 'application/json'}
@@ -80,7 +99,7 @@ def apirequest(target, data):
     Returns:
         json object loaded from response content string.
         If the communication with the API fails a message is printed
-        to STDOUT and a exit code 2 generated.
+        to STDOUT if debug mode is active. Will terminate with xit code 2.
     """
     try:
         httpreq = httplib2.Http()
@@ -90,7 +109,7 @@ def apirequest(target, data):
                                      urlencode(data),
                                      headers=HEADERS)
     except:
-        print "No connection"
+        debuginfo("apirequest failed. Request URL was: "+APIURL+target)
         sys.exit(2)
 
     return json.loads(content)
@@ -104,6 +123,7 @@ def fetchaccounts(domain):
     Returns:
         The json object will be passed as return without editing.
     """
+    debuginfo("Fetching email account list via API.")
     return apirequest("list", {'domainname': domain})
 
 
@@ -117,6 +137,7 @@ def fetchquota(address):
     Returns:
         The quota part of the json object for the response.
     """
+    debuginfo("Fetching quota info for account.")
     return apirequest("quota", {'emailaccount': address})["response"]["quota"]
 
 
@@ -134,6 +155,7 @@ def sendmsg(recipient, information):
         True if all seem to have executed correct.
         False if SMTP session did not work properly.
     """
+    debuginfo("Composing mail.")
     msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(MAXRATIO)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos")
     msg['From'] = SENDER
     msg['To'] = recipient
@@ -141,25 +163,32 @@ def sendmsg(recipient, information):
 
     smtp = smtplib.SMTP(SMTPSERVER)
     try:
+        debuginfo("Trying SMTP connection.")
         if SMTPTLS:
             smtp.starttls()
         smtp.login(SMTPUSER, SMTPPASSWORD)
+        debuginfo("SMTP connection established.")
     except:
-        print "SMTP login failed"
+        debuginfo("Connection to mail server failed.")
         return False
 
-    smtp.sendmail(SENDER, recipient, msg.as_string())
-    smtp.close()
+    try:
+        smtp.sendmail(SENDER, recipient, msg.as_string())
+        smtp.close()
+    except:
+        debuginfo("Mail could not be sent.")
+        return False
     return True
 
 
 for name in DOMAINNAME:
     name = str.strip(name)
-    if TALKATIVE is True:
+    if TALKATIVE is True or DEBUGMODE is True:
         print "Checking %s..." % name
 
     accountlist = fetchaccounts(name)
     for account in accountlist["response"]["list"]["emailaccounts"]:
+        debuginfo("Processing "+account["emailaccount"])
         quotaobj = fetchquota(account["emailaccount"])
         used = float(quotaobj["used"]["amount"])
         allowed = float(quotaobj["total"]["max"])
@@ -170,5 +199,5 @@ for name in DOMAINNAME:
                 sendmsg(account["emailaccount"], usageinfo)
             else:
                 print "%s: %s" % (account["emailaccount"], usageinfo)
-        if TALKATIVE is True:
+        if TALKATIVE is True or DEBUGMODE is True:
             print "%s: %s" % (account["emailaccount"], usageinfo)
