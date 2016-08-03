@@ -70,6 +70,9 @@ def debuginfo(outstring):
 debuginfo("Fetching API settings.")
 try:
     APIURL = CONFIG.get("API", "URL")
+    if APIURL.endswith("/") is False:
+        debuginfo("APIURL must end with /, will add it runtime.")
+        APIURL += "/"
     APIUSER = CONFIG.get("API", "user")
     APIKEY = CONFIG.get("API", "key")
 except ConfigParser.NoOptionError:
