@@ -16,11 +16,12 @@ TODO:
   - Move "information" string to configuration, "XX av YY (ZZ%)"
   - More verbose exception handling.
   - Whitelist and domain lists; clean empty records.
+  - Add command line options, allow them to override the config file.
 
 Martin Bagge <brother@bsnet.se>
 Halmstad Studentkår, KAOS <kaos@karen.hh.se>
 """
-from os.path import isfile
+from os.path import isfile, abspath, dirname, join
 import sys
 import ConfigParser
 import json
@@ -30,7 +31,9 @@ import smtplib
 from email.mime.text import MIMEText
 from time import strftime
 
-if isfile("config.ini") is False:
+CONFIGPATH = join(dirname(abspath(sys.argv[0])), "config.ini")
+
+if isfile(CONFIGPATH) is False:
     print '''Abort: No configuration file found.
              Copy config.ini.exemple to config.ini and edit it.
              Optionally you can use ./makeconfig.py to edit the config file
@@ -38,7 +41,7 @@ if isfile("config.ini") is False:
     sys.exit(1)
 
 CONFIG = ConfigParser.RawConfigParser()
-CONFIG.read("config.ini")
+CONFIG.read(CONFIGPATH)
 
 if len(CONFIG.sections()) != 4:
     print "Configuration not correct"
