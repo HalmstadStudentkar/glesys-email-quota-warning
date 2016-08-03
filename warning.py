@@ -11,11 +11,11 @@ MIT license applies, see the file COPYING.
 TODO:
   - Write configmaker tool
   - Add configuration setting to include all accounts in fetch.
-  - Add a white list of accounts to not send warnings for.
   - Move mail subject to configuration.
   - Move mail body to configuration.
   - Move "information" string to configuration, "XX av YY (ZZ%)"
   - More verbose exception handling.
+  - Whitelist and domain lists; clean empty records.
 
 Martin Bagge <brother@bsnet.se>
 Halmstad Studentkår, KAOS <kaos@karen.hh.se>
@@ -91,6 +91,12 @@ except ValueError:
     sys.exit(4)
 except ConfigParser.NoOptionError:
     debuginfo("Will use 84.9 as default ratio, config missing.")
+
+try:
+    WHITELIST = [x.strip() for x in CONFIG.get("Quota", "whitelist").split(",")]
+    debuginfo("Whitelist contains %d addresses." % len(WHITELIST))
+except ConfigParser.NoOptionError:
+    debuginfo("No addresses found in whitelist.")
 
 debuginfo("Fetching mail settings.")
 SMTPENABLED = False
@@ -229,6 +235,11 @@ for name in DOMAINNAME:
         allowed = float(quotaobj["total"]["max"])
         ratio = round((used / allowed) * 100, 2)
         usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
+        if address in WHITELIST:
+            if TALKATIVE is True or DEBUGMODE is True:
+                print "%s: Whitelisted address." % address
+                debuginfo("%s: %s" % (address, usageinfo))
+            continue
         if ratio > MAXRATIO:
             if SMTPENABLED is True:
                 sendmsg(address, usageinfo)
