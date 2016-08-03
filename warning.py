@@ -78,7 +78,7 @@ except ConfigParser.NoOptionError:
 
 debuginfo("Fetching domain information.")
 try:
-    DOMAINNAME = CONFIG.get("Quota", "domainname").split(",")
+    DOMAINNAME = [x.strip() for x in CONFIG.get("Quota", "domainname").split(",")]
 except ConfigParser.NoOptionError:
     print """Either a domain name or a comma separated list of domains must be
     provided in Quota section. No default suggestions."""
@@ -222,7 +222,6 @@ def sendmsg(recipient, information):
 
 
 for name in DOMAINNAME:
-    name = str.strip(name)
     if TALKATIVE is True or DEBUGMODE is True:
         print "Checking %s..." % name
 
