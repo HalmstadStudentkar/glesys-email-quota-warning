@@ -9,6 +9,7 @@ key: the generated key
 domainname: example.com, example.se
 ; Ratio is a float.
 ratio: 84.9
+; Comma separated list.
 whitelist: admin@example.com
 
 [SMTP]
