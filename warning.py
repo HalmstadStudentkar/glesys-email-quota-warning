@@ -161,18 +161,18 @@ def fetchaccounts(domain):
     return apirequest("list", {'domainname': domain})
 
 
-def fetchquota(address):
+def fetchquota(adr):
     """Retrieves the account quota information and passes the interesting
     part of the json object along to the request source.
 
     Arguments:
-        address (str): The email account address of interest.
+        adr (str): The email account address of interest.
 
     Returns:
         The quota part of the json object for the response.
     """
     debuginfo("Fetching quota info for account.")
-    return apirequest("quota", {'emailaccount': address})["response"]["quota"]
+    return apirequest("quota", {'emailaccount': adr})["response"]["quota"]
 
 
 def sendmsg(recipient, information):
@@ -222,16 +222,17 @@ for name in DOMAINNAME:
 
     accountlist = fetchaccounts(name)
     for account in accountlist["response"]["list"]["emailaccounts"]:
-        debuginfo("Processing "+account["emailaccount"])
-        quotaobj = fetchquota(account["emailaccount"])
+        address = account["emailaccount"]
+        debuginfo("Processing %s" % address)
+        quotaobj = fetchquota(address)
         used = float(quotaobj["used"]["amount"])
         allowed = float(quotaobj["total"]["max"])
         ratio = round((used / allowed) * 100, 2)
         usageinfo = str(used)+" av "+str(allowed)+" ("+str(ratio)+"%)"
         if ratio > MAXRATIO:
             if SMTPENABLED is True:
-                sendmsg(account["emailaccount"], usageinfo)
+                sendmsg(address, usageinfo)
             else:
-                print "%s: %s" % (account["emailaccount"], usageinfo)
+                print "%s: %s" % (address, usageinfo)
         if TALKATIVE is True or DEBUGMODE is True:
-            print "%s: %s" % (account["emailaccount"], usageinfo)
+            print "%s: %s" % (address, usageinfo)
