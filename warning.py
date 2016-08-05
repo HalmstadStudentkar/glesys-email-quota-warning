@@ -248,7 +248,7 @@ for name in DOMAINNAME:
         if ratio > MAXRATIO:
             if SMTPENABLED is True:
                 sendmsg(address, usageinfo)
-            else:
+            elif TALKATIVE is False:
                 print "%s: %s" % (address, usageinfo)
-        if TALKATIVE is True or DEBUGMODE is True:
+        elif TALKATIVE is True or DEBUGMODE is True:
             print "%s: %s" % (address, usageinfo)
