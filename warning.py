@@ -29,6 +29,7 @@ import httplib2
 from urllib import urlencode
 import smtplib
 from email.mime.text import MIMEText
+from email.header import Header
 from time import strftime
 
 CONFIGPATH = join(dirname(abspath(sys.argv[0])), "config.ini")
@@ -202,10 +203,10 @@ def sendmsg(recipient, information):
         False if SMTP session did not work properly.
     """
     debuginfo("Composing mail.")
-    msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(MAXRATIO)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos")
+    msg = MIMEText("Hej NN\r\n\r\nDu har ganska mycket e-post lagrat nu.\r\n  "+information+"\r\nDet här meddelandet är automatiskt och skickas ut en gång i veckan. Håll dig under "+str(MAXRATIO)+"% så kommer inte dessa mail mer.\r\n\r\n-- \r\nHälsningar Kaos", "plain", "utf-8")
     msg['From'] = SENDER
     msg['To'] = recipient
-    msg['Subject'] = "OBS! Trångt i mailkorgen - "+CURRENTDATE
+    msg['Subject'] = Header("OBS! Trångt i mailkorgen - "+CURRENTDATE, "utf-8")
 
     smtp = smtplib.SMTP(SMTPSERVER)
     try:
