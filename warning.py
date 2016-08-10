@@ -11,6 +11,7 @@ MIT license applies, see the file COPYING.
 TODO:
   - Write configmaker tool
   - Add configuration setting to include all accounts in fetch.
+  - Extract the account holder name to be used in mail body. If possible.
   - Move mail subject to configuration.
   - Move mail body to configuration.
   - Move "information" string to configuration, "XX av YY (ZZ%)"
